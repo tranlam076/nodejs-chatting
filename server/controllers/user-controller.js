@@ -1,6 +1,6 @@
 'use strict';
 
-import {User, Op} from '../models';
+import {User, Block, Op, Group} from '../models';
 import {encryptHelper} from '../helpers/index'
 import {responseHelper} from '../helpers/index'
 
@@ -40,7 +40,29 @@ export default class UserController {
             const users = await User.findAll({
                 order: [
                     ['createdAt', 'DESC']
-                ]
+                ],
+                include: {
+                    model: Block,
+                    as: 'blocks',
+                    include: [
+                        {
+                            model: User,
+                            as: 'user'
+                        },
+                        {
+                            model: Group,
+                            as: 'group'
+                        },
+                    ],
+                    attributes: {
+                        exclude: [
+                            'authorId',
+                            'userId',
+                            'groupId'
+                        ],
+                    },
+                    required: false
+                }
             });
             return responseHelper.responseSuccess(res, users);
         } catch (e) {

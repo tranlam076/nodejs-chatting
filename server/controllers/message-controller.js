@@ -10,18 +10,16 @@ export default class MessageController {
                 order: [
                     ['createdAt', 'DESC']
                 ],
-                include:
-                    [
-                        {
-                            model: User,
-                            as: 'author'
-                        },
-                        {
-                            model: Group,
-                            as: 'group'
-                        }
-                    ]
-                ,
+                include: [
+                    {
+                        model: User,
+                        as: 'author'
+                    },
+                    {
+                        model: Group,
+                        as: 'group'
+                    }
+                ],
                 attributes: {
                     exclude: [
                         'authorId',
@@ -54,18 +52,16 @@ export default class MessageController {
         try {
             const {id} = req.params;
             const message = await Message.find({
-                include:
-                    [
-                        {
-                            model: User,
-                            as: 'author'
-                        },
-                        {
-                            model: Group,
-                            as: 'group'
-                        }
-                    ]
-                ,
+                include: [
+                     {
+                        model: User,
+                        as: 'author'
+                    },
+                    {
+                        model: Group,
+                        as: 'group'
+                    }
+                ],
                 attributes: {
                     exclude: [
                         'authorId',

@@ -10,29 +10,26 @@ export default class BlockController {
                 order: [
                     ['createdAt', 'DESC']
                 ],
-                include:
-                    [
-                        {
-                            model: User,
-                            as: 'author'
-                        },
-                        {
-                            model: User,
-                            as: 'user'
-                        },
-                        {
-                            model: Group,
-                            as: 'group'
-                        }
-                    ]
-                ,
+                include: [
+                    {
+                        model: User,
+                        as: 'author'
+                    },
+                    {
+                        model: User,
+                        as: 'user'
+                    },
+                    {
+                        model: Group,
+                        as: 'group'
+                    }
+                ],
                 attributes: {
-                    exclude:
-                        [
-                            'authorId',
-                            'authorId',
-                            'groupId'
-                        ],
+                    exclude: [
+                        'authorId',
+                        'userId',
+                        'groupId'
+                    ],
                 }
             });
             return responseHelper.responseSuccess(res, blocks);
@@ -59,30 +56,27 @@ export default class BlockController {
         try {
             const {id} = req.params;
             const block = await Block.find({
-                include:
-                    [
-                        {
-                            model: User,
-                            as: 'author'
-                        },
-                        {
-                            model: User,
-                            as: 'user'
-                        },
-                        {
-                            model: Group,
-                            as: 'group'
-                        }
-                    ]
-                ,
+                include: [
+                    {
+                        model: User,
+                        as: 'author'
+                    },
+                    {
+                        model: User,
+                        as: 'user'
+                    },
+                    {
+                        model: Group,
+                        as: 'group'
+                    }
+                ],
                 attributes: {
-                    exclude:
-                        [
-                            'authorId',
-                            'authorId',
-                            'groupId'
-                        ],
-                }
+                    exclude: [
+                        'authorId',
+                        'authorId',
+                        'groupId'
+                    ],
+                },
                 where: {
                     id
                 }
