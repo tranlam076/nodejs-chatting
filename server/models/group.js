@@ -16,6 +16,12 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.UUID,
                 allowNull: false,
             },
+            avatar: {
+                type: DataTypes.STRING
+            },
+            type: {
+                type: DataTypes.ENUM(['private', 'group'])
+            },
             createdAt: {
                 type: DataTypes.DATE
             },

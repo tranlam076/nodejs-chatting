@@ -42,14 +42,17 @@ module.exports = (sequelize, DataTypes) => {
     Block.associate = (models) => {
         Block.belongsTo(models.User, {
             foreignKey: 'authorId',
+            as: 'author',
             onDelete: 'CASCADE'
         });
         Block.belongsTo(models.User, {
             foreignKey: 'userId',
+            as: 'user',
             onDelete: 'CASCADE'
         });
         Block.belongsTo(models.Group, {
             foreignKey: 'groupId',
+            as: 'group',
             onDelete: 'CASCADE'
         });
     };

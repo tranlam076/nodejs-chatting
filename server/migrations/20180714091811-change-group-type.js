@@ -1,17 +1,16 @@
 module.exports = {
-    up  : function (queryInterface, DataTypes) {
-        return queryInterface
-            .changeColumn('Group', 'type', {
-                type: DataTypes.ENUM,
-                values: ['private', 'group'],
-                allowNull: false
-            });
+    up  : function (queryInterface, Sequelize) {
+        // return queryInterface
+        //     .changeColumn('Group', 'type', {
+        //         type: Sequelize.ENUM('private', 'group'),
+        //         allowNull: false
+        //     });
     },
-    down: function (queryInterface, DataTypes) {
-        return queryInterface
-            .changeColumn('Group', 'type', {
-                type: DataTypes.STRING,
-                allowNull: false
-            });
+    down: function (queryInterface, Sequelize) {
+        // return queryInterface
+        //     .changeColumn('Group', 'type', {
+        //         type: Sequelize.STRING,
+        //         allowNull: false
+        //     });
     }
 };
