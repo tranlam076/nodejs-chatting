@@ -23,7 +23,8 @@ module.exports = {
                 type: DataTypes.STRING
             },
             type: {
-                type: DataTypes.STRING
+                type: DataTypes.ENUM(['private', 'group']),
+                allowNull: false
             },
             createdAt: {
                 type: DataTypes.DATE,
