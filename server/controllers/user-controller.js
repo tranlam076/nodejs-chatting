@@ -41,36 +41,40 @@ export default class UserController {
                 order: [
                     ['createdAt', 'DESC']
                 ],
-                include: {
-                    model: Block,
-                    as: 'blocks',
-                    include: [
-                        {
-                            model: User,
-                            as: 'user'
-                        },
-                        {
-                            model: Group,
-                            as: 'group'
-                        },
-                    ],
-                    attributes: {
-                        exclude: [
-                            'authorId',
-                            'userId',
-                            'groupId'
+                include: [
+                    {
+                        model: Block,
+                        as: 'blocks',
+                        include: [
+                            {
+                                model: User,
+                                as: 'user'
+                            },
+                            {
+                                model: Group,
+                                as: 'group'
+                            },
                         ],
+                        attributes: {
+                            exclude: [
+                                'authorId',
+                                'userId',
+                                'groupId'
+                            ],
+                        },
+                        required: false
                     },
-                    required: false
-                }
+                    {
+                        model: Group,
+                        as: 'groups',
+                        required: false
+                    }
+                ]
             });
             return responseHelper.responseSuccess(res, users);
         } catch (e) {
             console.log(e);
-            return res.status(400).json({
-                success: false,
-                error: e.message
-            })
+            return responseHelper.responseError(res, e);
         }
 
     };
@@ -90,10 +94,7 @@ export default class UserController {
             });
             return responseHelper.responseSuccess(res, newUser);
         } catch (e) {
-            return res.status(400).json({
-                success: false,
-                error: e.message
-            })
+            return responseHelper.responseError(res, e);
         }
     };
 
@@ -131,10 +132,7 @@ export default class UserController {
             }
             return responseHelper.responseSuccess(res, updatedUser[1]);
         } catch (e) {
-            return res.status(400).json({
-                success: false,
-                error: e.message
-            });
+            return responseHelper.responseError(res, new Error('User not found'));
         }
     };
 
