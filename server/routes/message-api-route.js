@@ -7,7 +7,7 @@ import {Authentication} from '../middlewares'
 module.exports = (app) => {
 
     app.route('/messages')
-        .get([Authentication.isAuth], messageController.getListMessage)
+        .get([Authentication.isAuth], messageController.getListMessages)
         .post([Authentication.isAuth], messageController.createMessage);
 
     app.route('/messages/:id')

@@ -4,7 +4,7 @@ import {Block, Group, User, Op} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class BlockController {
-    getListBlock = async (req, res, next) => {
+    getListBlocks = async (req, res, next) => {
         try {
             const blocks = await Block.findAll({
                 order: [
@@ -94,26 +94,17 @@ export default class BlockController {
     updateBlock = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {authorId, userId, groupId} = req.body;
-            const author = req.user.id;
-            const block = await Block.find({
-                where: {
-                    id
-                },
-                attributes: ['authorId']
-            });
-            if (author !== block.authorId) {
-                return responseHelper.responseError(res, new Error('User is not the author of block'));
-            }
+            const {userId, groupId} = req.body;
+            const authorId = req.user.id
             const updatedBlock = await Block.update(
                 {
-                    authorId,
                     userId,
                     groupId
                 },
                 {
                     where: {
-                        id
+                        id,
+                        authorId
                     },
                     returning: true
                 }
@@ -131,21 +122,13 @@ export default class BlockController {
         try {
             const {id} = req.params;
             const authorId = req.user.id;
-            const block = await Block.find({
+            const block = await Block.destroy({
                 where: {
-                    id
-                },
-                attributes: ['authorId']
-            });
-            if (authorId !== block.authorId) {
-                return responseHelper.responseError(res, new Error('User is not the author of group'));
-            }
-            await Block.destroy({
-                where: {
-                    id
+                    id,
+                    authorId
                 }
             });
-            return responseHelper.responseSuccess(res, true);
+            return responseHelper.responseSuccess(res, block >= 1);
         } catch (e) {
             return responseHelper.responseError(res, e);
         }

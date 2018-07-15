@@ -6,7 +6,7 @@ import {Authentication} from '../middlewares'
 module.exports = (app) => {
 
     app.route('/users')
-        .get(userController.getListUser)
+        .get(userController.getListUsers)
         .post([Authentication.isAuth], userController.createUser);
 
     app.route('/users/:id')

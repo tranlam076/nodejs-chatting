@@ -4,7 +4,7 @@ import {Group, User, Op, Message} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class GroupController {
-    getListGroup = async (req, res, next) => {
+    getListGroups = async (req, res, next) => {
         try {
             const groups = await Group.findAll({
                 order: [
@@ -68,27 +68,18 @@ export default class GroupController {
     updateGroup = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {authorId, name, avatar, type} = req.body;
-            const author = req.user.id;
-            const group = await Group.find({
-                where: {
-                    id
-                },
-                attributes: ['authorId']
-            });
-            if (author !== group.authorId) {
-                return responseHelper.responseError(res, new Error('User is not the author of group'));
-            }
+            const {name, avatar, type} = req.body;
+            const authorId = req.user.id;
             const updatedGroup = await Group.update(
                 {
                     name,
-                    authorId,
                     avatar,
                     type
                 },
                 {
                     where: {
-                        id
+                        id,
+                        authorId
                     },
                     returning: true
                 }
@@ -106,21 +97,13 @@ export default class GroupController {
         try {
             const {id} = req.params;
             const authorId = req.user.id;
-            const group = await Group.find({
+            const group = await Group.destroy({
                 where: {
-                    id
-                },
-                attributes: ['authorId']
-            });
-            if (authorId !== group.authorId) {
-                return responseHelper.responseError(res, new Error('User is not the author of group'));
-            }
-            await Group.destroy({
-                where: {
-                    id
+                    id,
+                    authorId
                 }
             });
-            return responseHelper.responseSuccess(res, true);
+            return responseHelper.responseSuccess(res, group >= 1);
         } catch (e) {
             return responseHelper.responseError(res, e);
         }

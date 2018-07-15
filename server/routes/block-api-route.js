@@ -7,7 +7,7 @@ import {Authentication} from '../middlewares'
 module.exports = (app) => {
 
     app.route('/blocks')
-        .get([Authentication.isAuth], blockController.getListBlock)
+        .get([Authentication.isAuth], blockController.getListBlocks)
         .post([Authentication.isAuth], blockController.createBlock);
 
     app.route('/blocks/:id')

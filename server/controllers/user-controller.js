@@ -42,8 +42,18 @@ export default class UserController {
         }
     };
 
-    getListUser = async (req, res, next) => {
+    getListUsers = async (req, res, next) => {
         try {
+            const author = req.user.id;
+            const user = await Block.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (author !== user.id) {
+                return responseHelper.responseError(res, new Error('User'));
+            }
             const users = await User.findAll({
                 order: [
                     ['createdAt', 'DESC']
@@ -83,7 +93,6 @@ export default class UserController {
             console.log(e);
             return responseHelper.responseError(res, e);
         }
-
     };
 
     createUser = async (req, res, next) => {
@@ -122,6 +131,10 @@ export default class UserController {
         try {
             const {id} = req.params;
             const {username, address} = req.body;
+            const authorId = req.user.id;
+            if (id !== authorId) {
+                responseHelper.responseError(res, 'User is not the author of that id')
+            }
             const updatedUser = await User.update(
                 {
                     username,
@@ -146,6 +159,10 @@ export default class UserController {
     deleteUser = async (req, res, next) => {
         try {
             const {id} = req.params;
+            const authorId = req.user.id;
+            if (id !== authorId) {
+                responseHelper.responseError(res, 'User is not the author of that id')
+            }
             await User.destroy({
                 where: {
                     id
