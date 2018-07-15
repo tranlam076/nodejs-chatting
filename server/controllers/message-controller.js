@@ -35,7 +35,8 @@ export default class MessageController {
 
     createMessage = async (req, res, next) => {
         try {
-            const {authorId, groupId, body, type} = req.body;
+            const {groupId, body, type} = req.body;
+            const authorId = req.user.id;
             const newMessage = await Message.create({
                 authorId,
                 groupId,
@@ -84,7 +85,8 @@ export default class MessageController {
     updateMessage = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {authorId, groupId, body, type} = req.body;
+            const {groupId, body, type} = req.body;
+            const authorId = req.user.id;
             const updatedMessage = await Message.update(
                 {
                     authorId,

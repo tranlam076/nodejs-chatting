@@ -1,8 +1,7 @@
 'use strict';
 
 import {User, Block, Op, Group} from '../models';
-import {encryptHelper} from '../helpers/index'
-import {responseHelper} from '../helpers/index'
+import {encryptHelper, responseHelper, JWTHelper} from '../helpers/index'
 
 export default class UserController {
 
@@ -17,6 +16,9 @@ export default class UserController {
                 const user = await User.find({
                     where: {
                         username
+                    },
+                    attributes:{
+                        include: ['password', 'username', 'id']
                     }
                 });
                 if (!user) {
@@ -25,7 +27,15 @@ export default class UserController {
                     let checkPassword = await encryptHelper.checkHash(password, user.password);
                     console.log(checkPassword);
                     if (checkPassword) {
-                        return responseHelper.responseSuccess(res, true);
+                        // return responseHelper.responseSuccess(res, true);
+                        // Gen token
+                        const token = await JWTHelper.sign('node_mentor_secret_key', {
+                            id: user.id,
+                            username: user.username
+                        });
+                        return responseHelper.responseSuccess(res, {
+                            token
+                        });
                     }
                     return responseHelper.responseError(res, new Error('Password is incorrect'));
                 }
@@ -174,13 +184,21 @@ export default class UserController {
 
     changePassword = async (req, res, next) => {
         try {
-            const {id} = req.params;
+            const id = req.user.id;
             const {currentPassword, newPassword} = req.body;
             const user = await User.find({
                 where: {
                     id
+                },
+                attributes: {
+                    include: [
+                        'password'
+                    ]
                 }
             });
+            if (! user) {
+                return responseHelper.responseError(res, new Error('User not found'));
+            }
             let checkPassword = await encryptHelper.checkHash(currentPassword, user.password);
             if (checkPassword) {
                 let newHash = await encryptHelper.createHash(newPassword);
@@ -200,6 +218,7 @@ export default class UserController {
                 }
                 return responseHelper.responseSuccess(res, updatedUser[1]);
             }
+            return responseHelper.responseError(res, new Error('Password is incorrect'));
         } catch (e) {
             return responseHelper.responseError(res, e);
         }

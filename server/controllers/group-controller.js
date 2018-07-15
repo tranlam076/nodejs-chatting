@@ -27,7 +27,8 @@ export default class GroupController {
 
     createGroup = async (req, res, next) => {
         try {
-            const {name, avatar, authorId, type} = req.body;
+            const {name, avatar, type} = req.body;
+            const authorId = req.user.id;
             const newGroup = await Group.create({
                 name,
                 authorId,
@@ -67,7 +68,8 @@ export default class GroupController {
     updateGroup = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {name, avatar, authorId, type} = req.body;
+            const {name, avatar, type} = req.body;
+            const authorId = req.user.id;
             const updatedGroup = await Group.update(
                 {
                     name,

@@ -40,7 +40,8 @@ export default class BlockController {
 
     createBlock = async (req, res, next) => {
         try {
-            const {authorId, userId, groupId} = req.body;
+            const {userId, groupId} = req.body;
+            const authorId = req.user.id;
             const newBlock = await Block.create({
                 authorId,
                 userId,
@@ -92,8 +93,9 @@ export default class BlockController {
 
     updateBlock = async (req, res, next) => {
         try {
-            const {id} = req.params;
-            const {authorId, userId, groupId} = req.body;
+            const {id} = req.user.id;
+            const {userId, groupId} = req.body;
+            const authorId = req.user.id;
             const updatedBlock = await Block.update(
                 {
                     authorId,
