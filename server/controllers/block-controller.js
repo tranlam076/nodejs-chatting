@@ -93,9 +93,18 @@ export default class BlockController {
 
     updateBlock = async (req, res, next) => {
         try {
-            const {id} = req.user.id;
-            const {userId, groupId} = req.body;
-            const authorId = req.user.id;
+            const {id} = req.params;
+            const {authorId, userId, groupId} = req.body;
+            const author = req.user.id;
+            const block = await Block.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (author !== block.authorId) {
+                return responseHelper.responseError(res, new Error('User is not the author of block'));
+            }
             const updatedBlock = await Block.update(
                 {
                     authorId,
@@ -121,6 +130,16 @@ export default class BlockController {
     deleteBlock = async (req, res, next) => {
         try {
             const {id} = req.params;
+            const authorId = req.user.id;
+            const block = await Block.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (authorId !== block.authorId) {
+                return responseHelper.responseError(res, new Error('User is not the author of group'));
+            }
             await Block.destroy({
                 where: {
                     id

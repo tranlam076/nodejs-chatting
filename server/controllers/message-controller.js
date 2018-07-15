@@ -1,6 +1,6 @@
 'use strict';
 
-import {Message, Group, User, Op} from '../models';
+import {Message, Group, User, Op, Block} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class MessageController {
@@ -85,8 +85,17 @@ export default class MessageController {
     updateMessage = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {groupId, body, type} = req.body;
-            const authorId = req.user.id;
+            const {authorId, groupId, body, type} = req.body;
+            const author = req.user.id;
+            const message = await Message.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (author !== message.authorId) {
+                return responseHelper.responseError(res, new Error('User is not the author of message'));
+            }
             const updatedMessage = await Message.update(
                 {
                     authorId,
@@ -113,6 +122,16 @@ export default class MessageController {
     deleteMessage = async (req, res, next) => {
         try {
             const {id} = req.params;
+            const author = req.user.id;
+            const message = await Message.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (author !== message.authorId) {
+                return responseHelper.responseError(res, new Error('User is not the author of group'));
+            }
             await Message.destroy({
                 where: {
                     id

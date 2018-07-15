@@ -1,6 +1,6 @@
 'use strict';
 
-import {Group, User, Op} from '../models';
+import {Group, User, Op, Message} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class GroupController {
@@ -68,8 +68,17 @@ export default class GroupController {
     updateGroup = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {name, avatar, type} = req.body;
-            const authorId = req.user.id;
+            const {authorId, name, avatar, type} = req.body;
+            const author = req.user.id;
+            const group = await Group.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (author !== group.authorId) {
+                return responseHelper.responseError(res, new Error('User is not the author of group'));
+            }
             const updatedGroup = await Group.update(
                 {
                     name,
@@ -96,6 +105,16 @@ export default class GroupController {
     deleteGroup = async (req, res, next) => {
         try {
             const {id} = req.params;
+            const authorId = req.user.id;
+            const group = await Group.find({
+                where: {
+                    id
+                },
+                attributes: ['authorId']
+            });
+            if (authorId !== group.authorId) {
+                return responseHelper.responseError(res, new Error('User is not the author of group'));
+            }
             await Group.destroy({
                 where: {
                     id

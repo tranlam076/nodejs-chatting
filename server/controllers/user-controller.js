@@ -17,9 +17,7 @@ export default class UserController {
                     where: {
                         username
                     },
-                    attributes:{
-                        include: ['password', 'username', 'id']
-                    }
+                    attributes: ['password', 'username', 'id']
                 });
                 if (!user) {
                     return responseHelper.responseError(res, new Error('Username not found'));
@@ -27,7 +25,6 @@ export default class UserController {
                     let checkPassword = await encryptHelper.checkHash(password, user.password);
                     console.log(checkPassword);
                     if (checkPassword) {
-                        // return responseHelper.responseSuccess(res, true);
                         // Gen token
                         const token = await JWTHelper.sign('node_mentor_secret_key', {
                             id: user.id,
@@ -190,16 +187,13 @@ export default class UserController {
                 where: {
                     id
                 },
-                attributes: {
-                    include: [
-                        'password'
-                    ]
-                }
+                attributes: ['password']
             });
+            console.log(user);
             if (! user) {
                 return responseHelper.responseError(res, new Error('User not found'));
             }
-            let checkPassword = await encryptHelper.checkHash(currentPassword, user.password);
+            const checkPassword = await encryptHelper.checkHash(currentPassword, user.password);
             if (checkPassword) {
                 let newHash = await encryptHelper.createHash(newPassword);
                 const updatedUser = await User.update(
