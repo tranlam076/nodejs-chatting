@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         });
         MemberGroup.belongsTo(models.User, {
             foreignKey: 'userId',
+            as: 'user',
             onDelete: 'CASCADE'
         });
     };

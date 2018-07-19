@@ -14,5 +14,4 @@ module.exports = (app) => {
         .get([Authentication.isAuth], blockController.getOneBlock)
         .put([Authentication.isAuth], blockController.updateBlock)
         .delete([Authentication.isAuth], blockController.deleteBlock);
-
 };

@@ -46,6 +46,7 @@ export default class BlockController {
                 authorId,
                 userId,
                 groupId
+
             });
             return responseHelper.responseSuccess(res, newBlock);
         } catch (e) {
@@ -95,7 +96,7 @@ export default class BlockController {
         try {
             const {id} = req.params;
             const {userId, groupId} = req.body;
-            const authorId = req.user.id
+            const authorId = req.user.id;
             const updatedBlock = await Block.update(
                 {
                     userId,

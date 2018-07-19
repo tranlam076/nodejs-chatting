@@ -37,13 +37,22 @@ export default class MessageController {
         try {
             const {groupId, body, type} = req.body;
             const authorId = req.user.id;
-            const newMessage = await Message.create({
-                authorId,
-                groupId,
-                body,
-                type
+            const block = await Block.find({
+               where: {
+                   authorId,
+                   groupId
+               }
             });
-            return responseHelper.responseSuccess(res, newMessage);
+            if (block === null) {
+                const newMessage = await Message.create({
+                    authorId,
+                    groupId,
+                    body,
+                    type
+                });
+                return responseHelper.responseSuccess(res, newMessage);
+            }
+            return responseHelper.responseError(res, new Error('User had blocked that group'))
         } catch (e) {
             return responseHelper.responseError(res, e);
         }

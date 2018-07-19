@@ -1,6 +1,6 @@
 'use strict';
 
-import {Group, User, Op, Message} from '../models';
+import {Group, User, MemberGroup, Message, Op} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class GroupController {
@@ -45,13 +45,28 @@ export default class GroupController {
         try {
             const {id} = req.params;
             const group = await Group.find({
-                include: {
-                    model: User,
-                    as: 'author'
-                },
-                attributes: {
-                    exclude: 'authorId'
-                },
+                include: [
+                    {
+                        model: User,
+                        as: 'author'
+                    },
+                    {
+                        model: MemberGroup,
+                        as: 'members',
+                        include: [
+                            {
+                                model: User,
+                                as: 'user'
+                            }
+                        ],
+                        attributes: {
+                            exclude: [
+                                'userId',
+                                'groupId'
+                            ]
+                        }
+                    }
+                ],
                 where: {
                     id
                 }

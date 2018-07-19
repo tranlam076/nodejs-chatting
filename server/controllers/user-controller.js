@@ -1,6 +1,6 @@
 'use strict';
 
-import {User, Block, Op, Group} from '../models';
+import {User, Block, Op, Group, MemberGroup} from '../models';
 import {encryptHelper, responseHelper, JWTHelper} from '../helpers/index'
 
 export default class UserController {
@@ -10,7 +10,7 @@ export default class UserController {
             const {username, password} = req.body;
             if (username === '' || username === undefined) {
                 return responseHelper.responseError(res, new Error('Username is required field'));
-            } else if (password === null || password === '' || password === undefined) {
+            } else if (password === '' || password === undefined) {
                 return responseHelper.responseError(res, new Error('Password is required field'));
             } else {
                 const user = await User.find({
@@ -44,16 +44,6 @@ export default class UserController {
 
     getListUsers = async (req, res, next) => {
         try {
-            const author = req.user.id;
-            const user = await Block.find({
-                where: {
-                    id
-                },
-                attributes: ['authorId']
-            });
-            if (author !== user.id) {
-                return responseHelper.responseError(res, new Error('User'));
-            }
             const users = await User.findAll({
                 order: [
                     ['createdAt', 'DESC']
@@ -101,8 +91,12 @@ export default class UserController {
             if (!Array.isArray(address) || address.length === 0) {
                 return responseHelper.responseError(res, new Error('Address is invalid'));
             }
+            if (username === '' || username === undefined) {
+                return responseHelper.responseError(res, new Error('Username is required field'));
+            } else if (password === '' || password === undefined) {
+                return responseHelper.responseError(res, new Error('Password is required field'));
+            }
             let newHash = await encryptHelper.createHash(password);
-
             const newUser = await User.create({
                 username,
                 password: newHash,
@@ -116,7 +110,7 @@ export default class UserController {
 
     getOneUser = async (req, res, next) => {
         try {
-            const {id} = req.params;
+            const id = req.user.id;
             const user = await User.findById(id);
             if (!user) {
                 return responseHelper.responseError(res, new Error('User not found'));
@@ -230,6 +224,45 @@ export default class UserController {
                 return responseHelper.responseSuccess(res, updatedUser[1]);
             }
             return responseHelper.responseError(res, new Error('Password is incorrect'));
+        } catch (e) {
+            return responseHelper.responseError(res, e);
+        }
+    };
+
+    blockUserInGroup = async (req, res, next) => {
+        try {
+            const {userId, groupId} = req.params;
+            const authorId = req.user.id;
+            const group = await Group.find({
+                where: {
+                    authorId,
+                    id: groupId
+                }
+            });
+            if (group !== null) {
+                const newBlock = await Block.create({
+                    authorId,
+                    userId,
+                    groupId
+                });
+                return responseHelper.responseSuccess(res, newBlock);
+            }
+            return responseHelper.responseError(res, new Error('User is not the author of that group'))
+        } catch (e) {
+            return responseHelper.responseError(res, e);
+        }
+    };
+
+
+    joinGroup = async (req, res, next) => {
+        try {
+            const {groupId} = req.body;
+            const userId = req.user.id;
+            const newMemberInGroup = await MemberGroup.create({
+                userId,
+                groupId
+            });
+            return responseHelper.responseSuccess(res, newMemberInGroup);
         } catch (e) {
             return responseHelper.responseError(res, e);
         }
