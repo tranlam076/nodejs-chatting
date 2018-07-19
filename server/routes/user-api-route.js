@@ -14,7 +14,7 @@ module.exports = (app) => {
         .put([Authentication.isAuth], userController.updateUser)
         .delete([Authentication.isAuth, RoleManagement.isAdmin], userController.deleteUser);
 
-    app.route('/users/changePassword')
+    app.route('/users/change-password')
         .post([Authentication.isAuth], userController.changePassword);
 
     app.route('/users/search/:username')
