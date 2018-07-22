@@ -38,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
     MemberGroup.associate = (models) => {
         MemberGroup.belongsTo(models.Group, {
             foreignKey: 'groupId',
+            as: 'group',
             onDelete: 'CASCADE'
         });
         MemberGroup.belongsTo(models.User, {

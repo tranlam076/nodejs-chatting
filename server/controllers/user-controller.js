@@ -17,7 +17,7 @@ export default class UserController {
                     where: {
                         username
                     },
-                    attributes: ['password', 'username', 'id']
+                    attributes: ['password', 'username', 'id', 'role']
                 });
                 if (!user) {
                     return responseHelper.responseError(res, new Error('Username not found'));
@@ -26,9 +26,10 @@ export default class UserController {
                     console.log(checkPassword);
                     if (checkPassword) {
                         // Gen token
-                        const token = await JWTHelper.sign('node_mentor_secret_key', {
+                        const token = await JWTHelper.sign({
                             id: user.id,
-                            username: user.username
+                            username: user.username,
+                            role: user.role
                         });
                         return responseHelper.responseSuccess(res, {
                             token
@@ -87,7 +88,7 @@ export default class UserController {
 
     createUser = async (req, res, next) => {
         try {
-            const {username, password, address} = req.body;
+            const {username, password, address, role} = req.body;
             if (!Array.isArray(address) || address.length === 0) {
                 return responseHelper.responseError(res, new Error('Address is invalid'));
             }
@@ -100,7 +101,8 @@ export default class UserController {
             const newUser = await User.create({
                 username,
                 password: newHash,
-                address
+                address,
+                role
             });
             return responseHelper.responseSuccess(res, newUser);
         } catch (e) {
@@ -153,10 +155,6 @@ export default class UserController {
     deleteUser = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const authorId = req.user.id;
-            if (id !== authorId) {
-                responseHelper.responseError(res, 'User is not the author of that id')
-            }
             await User.destroy({
                 where: {
                     id
@@ -201,7 +199,7 @@ export default class UserController {
                 attributes: ['password']
             });
             console.log(user);
-            if (! user) {
+            if (!user) {
                 return responseHelper.responseError(res, new Error('User not found'));
             }
             const checkPassword = await encryptHelper.checkHash(currentPassword, user.password);
@@ -267,4 +265,26 @@ export default class UserController {
             return responseHelper.responseError(res, e);
         }
     };
+
+    getListActiveGroups = async (req, res, next) => {
+        try {
+            const authorId = req.user.id;
+            const memberGroups = await MemberGroup.findAll({
+                include: [
+                    {
+                        model: Group,
+                        as: 'group',
+                    },
+                ],
+                attributes: [],
+                where: {
+                    userId: authorId
+                }
+            });
+            console.log(memberGroups);
+            return responseHelper.responseSuccess(res, memberGroups);
+        } catch (e) {
+            return responseHelper.responseError(res, e);
+        }
+    }
 }

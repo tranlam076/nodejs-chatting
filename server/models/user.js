@@ -22,11 +22,14 @@ module.exports = (sequelize, DataTypes) => {
             avatar: {
                 type: DataTypes.STRING
             },
+            address: {
+                type: DataTypes.ARRAY(DataTypes.STRING),
+            },
             isActive: {
                 type: DataTypes.BOOLEAN,
             },
-            address: {
-                type: DataTypes.ARRAY(DataTypes.STRING),
+            role: {
+                type: DataTypes.ENUM(['admin', 'normal'])
             },
             createdAt: {
                 type: DataTypes.DATE

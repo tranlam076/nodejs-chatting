@@ -50,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'groupId',
             as: 'members'
         });
+        Group.hasMany(models.Block, {
+            foreignKey: 'groupId',
+            as: 'blocks'
+        });
     };
 
     return Group;

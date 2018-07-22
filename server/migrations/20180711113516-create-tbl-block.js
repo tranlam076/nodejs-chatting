@@ -3,12 +3,9 @@ module.exports = {
         return queryInterface.createTable('Block', {
             id: {
                 type: DataTypes.UUID,
-                defaultValue: DataTypes.UUIDV4,
-                allowNull: false,
-                primaryKey: true
+                defaultValue: DataTypes.UUIDV4, primaryKey: true
             },
             authorId: {
-                allowNull: false,
                 type: DataTypes.UUID,
                 references: {
                     key: 'id',
@@ -17,7 +14,6 @@ module.exports = {
             },
             userId: {
                 type: DataTypes.UUID,
-                allowNull: false,
                 references: {
                     key: 'id',
                     model: 'User',

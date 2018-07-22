@@ -26,6 +26,9 @@ module.exports = {
             isActive: {
                 type: DataTypes.BOOLEAN,
             },
+            role: {
+              type: DataTypes.ENUM(['normal', 'admin'])
+            },
             address: {
                 type: DataTypes.ARRAY(DataTypes.STRING),
             },

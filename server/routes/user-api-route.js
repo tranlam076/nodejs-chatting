@@ -6,7 +6,7 @@ import {Authentication, RoleManagement} from '../middlewares'
 module.exports = (app) => {
 
     app.route('/users')
-        .get(userController.getListUsers)
+        .get([Authentication.isAuth], userController.getListUsers)
         .post(userController.createUser);
 
     app.route('/users/:id')
@@ -28,4 +28,7 @@ module.exports = (app) => {
 
     app.route('/users/join-group')
         .post([Authentication.isAuth], userController.joinGroup);
+
+    app.route('/users/get-list-active-groups')
+        .post([Authentication.isAuth], userController.getListActiveGroups);
 };

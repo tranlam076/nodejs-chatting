@@ -15,13 +15,13 @@ export default class Authentication {
                 authorization = req.body.token;
             }
             if (token !== null) {
-                req.user = await JWTHelper.verify(token, 'node_mentor_secret_key');
+                req.user = await JWTHelper.verify(token);
             } else if (authorization) {
                 const tokens = authorization.split('Bearer ');
                 if (tokens.length !== 2) {
                     return responseHelper.responseError(res, new Error('token is not provided'))
                 }
-                req.user = await JWTHelper.verify(tokens[1], 'node_mentor_secret_key');
+                req.user = await JWTHelper.verify(tokens[1]);
             } else {
                 return responseHelper.responseError(res, new Error('token is not provided'))
             }
