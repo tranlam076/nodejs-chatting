@@ -20,7 +20,6 @@ module.exports = {
                 }
             },
             groupId: {
-                allowNull: false,
                 type: DataTypes.UUID,
                 references: {
                     key: 'id',

@@ -22,6 +22,7 @@ module.exports = {
             avatar: {
                 type: DataTypes.STRING
             },
+
             type: {
                 type: DataTypes.ENUM(['private', 'group']),
                 allowNull: false

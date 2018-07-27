@@ -10,16 +10,13 @@ module.exports = (sequelize, DataTypes) => {
                 primaryKey: true
             },
             authorId: {
-                allowNull: false,
-                type: DataTypes.UUID,
+                type: DataTypes.UUID
             },
             userId: {
-                type: DataTypes.UUID,
-                allowNull: false,
+                type: DataTypes.UUID
             },
             groupId: {
-                allowNull: false,
-                type: DataTypes.UUID,
+                type: DataTypes.UUID
             },
             createdAt: {
                 type: DataTypes.DATE

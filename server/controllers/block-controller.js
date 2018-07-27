@@ -40,13 +40,11 @@ export default class BlockController {
 
     createBlock = async (req, res, next) => {
         try {
-            const {userId, groupId} = req.body;
-            const authorId = req.user.id;
+            const {authorId, userId, groupId} = req.body;
             const newBlock = await Block.create({
                 authorId,
                 userId,
                 groupId
-
             });
             return responseHelper.responseSuccess(res, newBlock);
         } catch (e) {

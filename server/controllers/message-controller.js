@@ -36,11 +36,11 @@ export default class MessageController {
     createMessage = async (req, res, next) => {
         try {
             /*
-            A group must be created before create a message, so we always have a group,
-            which has info of users who we will create that message for.
-            We have 3 kinds of block: -group block an user.
-                                      -user block another user.
-                                      -user block a group.
+            - We must create a group before create messages.
+            - authorId of group should be added to table MemberGroup as userId.
+            - We have 3 kinds of block: -group block an user.
+                                        -user block another user.
+                                        -user block a group.
             */
             const {groupId, body, type} = req.body;
             const authorId = req.user.id;
@@ -48,9 +48,19 @@ export default class MessageController {
             const group = await Group.find({
                 include: [
                     {
+                        required: false,
                         model: Block,
                         as: 'blocks',
-                        attributes: (['id', 'userId', 'authorId']),
+                        attributes: (['userId', 'authorId']),
+                    },
+                    {
+                        required: true,
+                        model: MemberGroup,
+                        as: 'members',
+                        where: {
+                            userId: authorId
+                        },
+                        attributes: []
                     }
                 ],
                 attributes: (['type', 'authorId']),
@@ -60,34 +70,19 @@ export default class MessageController {
             });
 
             if (group === null) {
-                return responseHelper.responseError(res, new Error('Group do not exist'));
-            }
-
-            const isAMember= await MemberGroup.find({
-                attributes: (['id']),
-                where: {
-                    groupId: groupId,
-                    userId: authorId
-                }
-            });
-
-            if (group.authorId !== authorId && isAMember === null) {
-                return responseHelper.responseError(res, new Error('User was not in group'));
-            }
-
-            if (group.type === 'private' && group.blocks.length !== 0) {
-                //check if user block another user or block a group
+                return responseHelper.responseError(res, new Error('Group had been deleted or User was not in group'));
+            } else if (group.type === 'private' && group.blocks.length !== 0) {
+                //check if user block a group
                 for (block of group.blocks) {
                     if (block.authorId === authorId) {
-                        return responseHelper.responseError(res, new Error('User already blocked'))
+                        return responseHelper.responseError(res, new Error('User had blocked that group'))
                     }
                 }
-            }
-            if (group.type === 'group' && group.blocks.length !== 0) {
+            } else if (group.type === 'group' && group.blocks.length !== 0) {
                 //check if group block an user
                 for (block of group.blocks) {
                     if (block.userId === authorId) {
-                        return responseHelper.responseError(res, new Error('User already blocked'))
+                        return responseHelper.responseError(res, new Error('Group had blocked that user'))
                     }
                 }
             }

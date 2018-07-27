@@ -1,6 +1,6 @@
 'use strict';
 
-import {Group, User, MemberGroup, Message, Op} from '../models';
+import {Group, User, MemberGroup, Message, Block, Op} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class GroupController {
@@ -30,11 +30,25 @@ export default class GroupController {
             const {name, avatar, type} = req.body;
             const authorId = req.user.id;
             const newGroup = await Group.create({
-                name,
-                authorId,
-                avatar,
-                type
-            });
+                    name,
+                    authorId,
+                    avatar,
+                    type,
+                    createdAt,
+                    members: {
+                        userId: authorId,
+                        getMessageSince: createdAt
+                    }
+                },
+                {
+                    include: [
+                        {
+                            model: MemberGroup,
+                            as: 'members'
+                        }
+                    ]
+                }
+            );
             return responseHelper.responseSuccess(res, newGroup);
         } catch (e) {
             return responseHelper.responseError(res, e);
@@ -44,6 +58,19 @@ export default class GroupController {
     getOneGroup = async (req, res, next) => {
         try {
             const {id} = req.params;
+            const groupBlocks = await Block.findAll({
+                where: {
+                    groupId: id
+                },
+                attributes: ['userId']
+            });
+            let listUserBlocks = [];
+            if (groupBlocks.length > 0) {
+                for (let item of groupBlocks) {
+                    listUserBlocks.push(item.userId)
+                }
+            }
+
             const group = await Group.find({
                 include: [
                     {
@@ -51,25 +78,39 @@ export default class GroupController {
                         as: 'author'
                     },
                     {
+                        required: false,
                         model: MemberGroup,
                         as: 'members',
+                        where: {
+                            isLeave: false,
+                            userId: {
+                                [Op.notIn]: listUserBlocks
+                            }
+                        },
+                        attributes: {
+                            exclude: [
+                                'authorId',
+                                'groupId'
+                            ]
+                        },
                         include: [
                             {
                                 model: User,
-                                as: 'user'
+                                as: 'user',
+                                attributes: ['username', 'avatar']
                             }
-                        ],
-                        attributes: {
-                            exclude: [
-                                'userId',
-                                'groupId'
-                            ]
-                        }
+                        ]
                     }
                 ],
                 where: {
                     id
-                }
+                },
+                attributes: {
+                    exclude: ['authorId']
+                },
+                order: [
+                    ['createdAt', 'DESC']
+                ]
             });
             if (!group) {
                 return responseHelper.responseError(res, new Error('Group not found'));
@@ -123,4 +164,71 @@ export default class GroupController {
             return responseHelper.responseError(res, e);
         }
     };
+
+    getListMessages = async (req, res, next) => {
+        try {
+            const {id} = req.params;
+            const authorId = req.user.id;
+            const isLeaveGroup = await MemberGroup.find({
+                where: {
+                    groupId: id,
+                    userId: authorId,
+                    isLeave: false
+                }, attributes: (['getMessageSince'])
+            });
+            if (isLeaveGroup === null) {
+                return responseHelper.responseError(res, new Error('User is not in that group'));
+            }
+
+            const groupBlock = await Block.find({
+                where: {
+                    groupId: id,
+                    [Op.or]: [
+                        {
+                            authorId
+                        },
+                        {
+                            userId: authorId
+                        }
+                    ]
+                },
+                attributes: ['id']
+            });
+            if (groupBlock !== null) {
+                return responseHelper.responseError(res, new Error('User is already blocked'))
+            }
+            const listMessages = await Message.findAll({
+                    include: [
+                        {
+                            model: User,
+                            as: 'author',
+                            attributes: (['username'])
+                        }
+                    ],
+                    where: {
+                        groupId: id,
+                        createdAt: {
+                            [Op.gt]: isLeaveGroup.getMessageSince
+                        }
+                    },
+                    attributes: {
+                        exclude: [
+                            'authorId',
+                            'deletedAt',
+                            'groupId',
+                        ],
+                    },
+                    order: [
+                        ['createdAt', 'DESC']
+                    ]
+                }
+            );
+            return responseHelper.responseSuccess(res, listMessages);
+        }
+        catch
+            (e) {
+            return responseHelper.responseError(res, e);
+        }
+    }
+    ;
 }

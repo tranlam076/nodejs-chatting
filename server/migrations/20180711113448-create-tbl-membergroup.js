@@ -15,6 +15,13 @@ module.exports = {
                     model: 'Group',
                 }
             },
+            isLeave: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            getMessageSince: {
+                type: DataTypes.DATE,
+            },
             userId: {
                 allowNull: false,
                 type: DataTypes.UUID,

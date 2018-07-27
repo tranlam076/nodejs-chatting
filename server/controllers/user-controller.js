@@ -1,6 +1,6 @@
 'use strict';
 
-import {User, Block, Op, Group, MemberGroup} from '../models';
+import {User, Block, Op, sequelize, Group, MemberGroup} from '../models';
 import {encryptHelper, responseHelper, JWTHelper} from '../helpers/index'
 
 export default class UserController {
@@ -256,9 +256,36 @@ export default class UserController {
         try {
             const {groupId} = req.body;
             const userId = req.user.id;
-            const newMemberInGroup = await MemberGroup.create({
-                userId,
-                groupId
+            const group = await Group.find({
+               where: {
+                   id: groupId
+               },
+                attributes: (['createdAt'])
+            });
+            if (group === null) {
+                return responseHelper.responseError(res, new Error('group dose not exist'))
+            }
+            const newMemberInGroup = await MemberGroup.create(
+                {
+                    userId,
+                    groupId,
+                    getMessageSince: group.createdAt
+                });
+            return responseHelper.responseSuccess(res, newMemberInGroup);
+        } catch (e) {
+            return responseHelper.responseError(res, e);
+        }
+    };
+
+    leaveGroup = async (req, res, next) => {
+        try {
+            const {groupId} = req.body;
+            const userId = req.user.id;
+            const newMemberInGroup = await MemberGroup.destroy({
+                where: {
+                    userId,
+                    groupId
+                }
             });
             return responseHelper.responseSuccess(res, newMemberInGroup);
         } catch (e) {
@@ -269,22 +296,75 @@ export default class UserController {
     getListActiveGroups = async (req, res, next) => {
         try {
             const authorId = req.user.id;
-            const memberGroups = await MemberGroup.findAll({
+            const userBlocks = await Block.findAll({
+                where: {
+                    authorId
+                },
+                attributes: ['groupId']
+            });
+            let listGroupBlocks = [];
+            if (userBlocks.length > 0) {
+                for (let item of userBlocks) {
+                    listGroupBlocks.push(item.groupId)
+                }
+            }
+
+            const listActiveGroups = await Group.findAll({
                 include: [
                     {
-                        model: Group,
-                        as: 'group',
+                        model: User,
+                        as: 'author'
+                    },
+                    {
+                        required: true,
+                        model: MemberGroup,
+                        as: 'members',
+                        where: {
+                            userId: authorId,
+                            isLeave: false,
+                        },
+                        attributes: []
                     },
                 ],
-                attributes: [],
                 where: {
-                    userId: authorId
-                }
+                    id: {
+                        [Op.notIn]: listGroupBlocks
+                    }
+                },
+                attributes: {
+                    exclude: ['authorId', 'updatedAt', 'createdAt', 'deletedAt']
+                },
+                order: [
+                    ['createdAt', 'DESC']
+                ],
             });
-            console.log(memberGroups);
-            return responseHelper.responseSuccess(res, memberGroups);
+            return responseHelper.responseSuccess(res, listActiveGroups);
         } catch (e) {
             return responseHelper.responseError(res, e);
         }
-    }
+    };
+
+    clearConversation = async (req, res, next) => {
+        try {
+            const authorId = req.user.id;
+            const {groupId} = req.body;
+            const clearConversation = await MemberGroup.update(
+                {
+                    getMessageSince: sequelize.fn("NOW")
+                },
+                {
+                    where: {
+                        groupId,
+                        userId: authorId
+                    },
+                    returning: true
+                });
+            if (clearConversation[0] === 0) {
+                return responseHelper.responseError(res, new Error('Cant clear conversation'));
+            }
+            return responseHelper.responseSuccess(res, clearConversation[1]);
+        } catch (e) {
+            return responseHelper.responseError(res, e);
+        }
+    };
 }

@@ -13,4 +13,7 @@ module.exports = (app) => {
         .get([Authentication.isAuth], groupController.getOneGroup)
         .put([Authentication.isAuth], groupController.updateGroup)
         .delete([Authentication.isAuth], groupController.deleteGroup);
+
+    app.route('/groups/:id/get-list-messages')
+        .post([Authentication.isAuth], groupController.getListMessages);
 };
