@@ -281,7 +281,11 @@ export default class UserController {
         try {
             const {groupId} = req.body;
             const userId = req.user.id;
-            const newMemberInGroup = await MemberGroup.destroy({
+            const newMemberInGroup = await MemberGroup.update(
+                {
+                    isLeave: true,
+                },
+                {
                 where: {
                     userId,
                     groupId
