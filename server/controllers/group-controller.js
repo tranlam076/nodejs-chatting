@@ -34,10 +34,8 @@ export default class GroupController {
                     authorId,
                     avatar,
                     type,
-                    createdAt,
                     members: {
                         userId: authorId,
-                        getMessageSince: createdAt
                     }
                 },
                 {
