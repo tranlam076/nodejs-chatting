@@ -174,27 +174,35 @@ export default class GroupController {
                     isLeave: false
                 }, attributes: (['getMessageSince'])
             });
-            if (isLeaveGroup === null) {
-                return responseHelper.responseError(res, new Error('User is not in that group'));
-            }
-
-            const groupBlock = await Block.find({
+            const listBlocks = await Block.findAll({
                 where: {
-                    groupId: id,
                     [Op.or]: [
                         {
-                            authorId
+                            groupId: id
                         },
                         {
-                            userId: authorId
+                            authorId
                         }
+
                     ]
                 },
-                attributes: ['id']
+                attributes: ['userId', 'authorId',]
             });
-            if (groupBlock !== null) {
-                return responseHelper.responseError(res, new Error('User is already blocked'))
+            let listUserBlocks = [];
+            if (listBlocks.length > 0) {
+                for (let block of listBlocks) {
+                    if (block.userId === authorId) {
+                        return responseHelper.responseError(res, new Error('User is already blocked'))
+                    }
+                    if (block.userId !== null) {
+                        listUserBlocks.push(block.userId);
+                    }
+                    if (block.authorId !== null) {
+                        listUserBlocks.push(block.authorId);
+                    }
+                }
             }
+
             const listMessages = await Message.findAll({
                     include: [
                         {
@@ -205,6 +213,9 @@ export default class GroupController {
                     ],
                     where: {
                         groupId: id,
+                        userId: {
+                            [Op.notIn]: listUserBlocks
+                        },
                         createdAt: {
                             [Op.gt]: isLeaveGroup.getMessageSince
                         }

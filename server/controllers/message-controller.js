@@ -53,12 +53,12 @@ export default class MessageController {
             });
             let listUserBlocks = [];
             if (listBlocks.length > 0) {
-                for (let item of listBlocks) {
-                    if (item.userId !== null) {
-                        listUserBlocks.push(item.userId);
+                for (let block of listBlocks) {
+                    if (block.userId !== null) {
+                        listUserBlocks.push(block.userId);
                     }
-                    if (item.authorId !== null) {
-                        listUserBlocks.push(item.authorId);
+                    if (block.authorId !== null) {
+                        listUserBlocks.push(block.authorId);
                     }
                 }
             }
