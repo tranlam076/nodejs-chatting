@@ -4,7 +4,7 @@ import {Block, Group, User, Op} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class BlockController {
-    getListBlock = async (req, res, next) => {
+    getListBlocks = async (req, res, next) => {
         try {
             const blocks = await Block.findAll({
                 order: [
@@ -93,16 +93,17 @@ export default class BlockController {
     updateBlock = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const {authorId, userId, groupId} = req.body;
+            const {userId, groupId} = req.body;
+            const authorId = req.user.id;
             const updatedBlock = await Block.update(
                 {
-                    authorId,
                     userId,
                     groupId
                 },
                 {
                     where: {
-                        id
+                        id,
+                        authorId
                     },
                     returning: true
                 }
@@ -119,12 +120,14 @@ export default class BlockController {
     deleteBlock = async (req, res, next) => {
         try {
             const {id} = req.params;
-            await Block.destroy({
+            const authorId = req.user.id;
+            const block = await Block.destroy({
                 where: {
-                    id
+                    id,
+                    authorId
                 }
             });
-            return responseHelper.responseSuccess(res, true);
+            return responseHelper.responseSuccess(res, block >= 1);
         } catch (e) {
             return responseHelper.responseError(res, e);
         }

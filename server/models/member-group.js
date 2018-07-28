@@ -17,6 +17,12 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 type: DataTypes.UUID,
             },
+            isLeave: {
+                type: DataTypes.BOOLEAN,
+            },
+            getMessageSince: {
+                type: DataTypes.DATE,
+            },
             createdAt: {
                 type: DataTypes.DATE
             },
@@ -38,10 +44,12 @@ module.exports = (sequelize, DataTypes) => {
     MemberGroup.associate = (models) => {
         MemberGroup.belongsTo(models.Group, {
             foreignKey: 'groupId',
+            as: 'group',
             onDelete: 'CASCADE'
         });
         MemberGroup.belongsTo(models.User, {
             foreignKey: 'userId',
+            as: 'user',
             onDelete: 'CASCADE'
         });
     };

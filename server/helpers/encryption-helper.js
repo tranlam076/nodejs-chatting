@@ -3,7 +3,7 @@ let bcrypt = require('bcrypt');
 const saltRounds = 5;
 let salt = bcrypt.genSaltSync(saltRounds);
 
-export default class EncryptHelper {
+export default class EncryptionHelper {
     createHash = (text) => {
         return new Promise((resolve, reject) => {
             bcrypt.genSalt(saltRounds, function (err, salt) {

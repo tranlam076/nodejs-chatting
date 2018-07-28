@@ -17,8 +17,7 @@ module.exports = {
             password: {
                 type: DataTypes.STRING,
                 validate: {
-                    max: 25,
-                    min: 10,
+                    len : [5, 25]
                 }
             },
             avatar: {
@@ -26,6 +25,9 @@ module.exports = {
             },
             isActive: {
                 type: DataTypes.BOOLEAN,
+            },
+            role: {
+              type: DataTypes.ENUM(['normal', 'admin'])
             },
             address: {
                 type: DataTypes.ARRAY(DataTypes.STRING),

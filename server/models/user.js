@@ -19,8 +19,17 @@ module.exports = (sequelize, DataTypes) => {
             password: {
                 type: DataTypes.STRING
             },
+            avatar: {
+                type: DataTypes.STRING
+            },
             address: {
-                type: DataTypes.ARRAY(DataTypes.STRING)
+                type: DataTypes.ARRAY(DataTypes.STRING),
+            },
+            isActive: {
+                type: DataTypes.BOOLEAN,
+            },
+            role: {
+                type: DataTypes.ENUM(['admin', 'normal'])
             },
             createdAt: {
                 type: DataTypes.DATE
@@ -53,15 +62,12 @@ module.exports = (sequelize, DataTypes) => {
     );
 
     User.associate = (models) => {
-        User.hasMany(models.Group, {
-            as: 'Group',
-            foreignKey: 'authorId'
-        });
-    };
-
-    User.associate = (models) => {
         User.hasMany(models.Block, {
             as: 'blocks',
+            foreignKey: 'authorId'
+        });
+        User.hasMany(models.Group, {
+            as: 'groups',
             foreignKey: 'authorId'
         });
     };

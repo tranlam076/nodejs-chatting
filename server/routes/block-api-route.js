@@ -1,16 +1,17 @@
 'use strict';
 
 import {blockController} from '../controllers/index';
+import {Authentication} from '../middlewares'
+
 
 module.exports = (app) => {
 
     app.route('/blocks')
-        .get(blockController.getListBlock)
-        .post(blockController.createBlock);
+        .get([Authentication.isAuth], blockController.getListBlocks)
+        .post([Authentication.isAuth], blockController.createBlock);
 
     app.route('/blocks/:id')
-        .get(blockController.getOneBlock)
-        .put(blockController.updateBlock)
-        .delete(blockController.deleteBlock);
-
+        .get([Authentication.isAuth], blockController.getOneBlock)
+        .put([Authentication.isAuth], blockController.updateBlock)
+        .delete([Authentication.isAuth], blockController.deleteBlock);
 };
