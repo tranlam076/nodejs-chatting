@@ -174,6 +174,11 @@ export default class GroupController {
                     isLeave: false
                 }, attributes: (['getMessageSince'])
             });
+
+            if (isLeaveGroup === null) {
+                return responseHelper.responseError(res, new Error('User is not in Group'))
+            }
+
             const listBlocks = await Block.findAll({
                 where: {
                     [Op.or]: [
