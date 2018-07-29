@@ -26,14 +26,4 @@ module.exports = (app) => {
     app.route('/users/:userId/block/:groupId')
         .post([Authentication.isAuth], userController.blockUserInGroup);
 
-    app.route('/users/join-group')
-        .post([Authentication.isAuth], userController.joinGroup);
-    app.route('/users/leave-group')
-        .post([Authentication.isAuth], userController.leaveGroup);
-
-    app.route('/users/get-list-active-groups')
-        .post([Authentication.isAuth], userController.getListActiveGroups);
-
-    app.route('/users/clear-conversation')
-        .post([Authentication.isAuth], userController.clearConversation);
 };

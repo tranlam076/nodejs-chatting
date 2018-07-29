@@ -17,10 +17,7 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 type: DataTypes.UUID,
             },
-            isLeave: {
-                type: DataTypes.BOOLEAN,
-            },
-            getMessageSince: {
+            clearedAt: {
                 type: DataTypes.DATE,
             },
             createdAt: {

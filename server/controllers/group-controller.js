@@ -1,6 +1,6 @@
 'use strict';
 
-import {Group, User, MemberGroup, Message, Block, Op} from '../models';
+import {Group, User, MemberGroup, Message, Block, Op, sequelize} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class GroupController {
@@ -28,14 +28,15 @@ export default class GroupController {
     createGroup = async (req, res, next) => {
         try {
             const {name, avatar, type} = req.body;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const newGroup = await Group.create({
                     name,
-                    authorId,
+                    authorId: userLoginId,
                     avatar,
                     type,
                     members: {
-                        userId: authorId,
+                        userId: userLoginId,
+                        clearedAt: sequelize.fn('NOW')
                     }
                 },
                 {
@@ -123,7 +124,7 @@ export default class GroupController {
         try {
             const {id} = req.params;
             const {name, avatar, type} = req.body;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const updatedGroup = await Group.update(
                 {
                     name,
@@ -133,7 +134,7 @@ export default class GroupController {
                 {
                     where: {
                         id,
-                        authorId
+                        authorId: userLoginId
                     },
                     returning: true
                 }
@@ -150,11 +151,11 @@ export default class GroupController {
     deleteGroup = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const group = await Group.destroy({
                 where: {
                     id,
-                    authorId
+                    authorId: userLoginId
                 }
             });
             return responseHelper.responseSuccess(res, group >= 1);
@@ -163,86 +164,80 @@ export default class GroupController {
         }
     };
 
-    getListMessages = async (req, res, next) => {
+    getListActiveGroups = async (req, res, next) => {
         try {
-            const {id} = req.params;
-            const authorId = req.user.id;
-            const isLeaveGroup = await MemberGroup.find({
+            const userLoginId = req.user.id;
+            const memberGroups = await MemberGroup.findAll({
                 where: {
-                    groupId: id,
-                    userId: authorId,
-                    isLeave: false
-                }, attributes: (['getMessageSince'])
-            });
-
-            if (isLeaveGroup === null) {
-                return responseHelper.responseError(res, new Error('User is not in Group'))
-            }
-
-            const listBlocks = await Block.findAll({
-                where: {
-                    [Op.or]: [
-                        {
-                            groupId: id
-                        },
-                        {
-                            authorId
-                        }
-
-                    ]
+                    userId: userLoginId
                 },
-                attributes: ['userId', 'authorId',]
+                attributes: ['groupId']
             });
-            let listUserBlocks = [];
-            if (listBlocks.length > 0) {
-                for (let block of listBlocks) {
-                    if (block.userId === authorId) {
-                        return responseHelper.responseError(res, new Error('User is already blocked'))
+            const groups = memberGroups.map((item) => item.groupId);
+            const listActiveGroups = await Group.findAll({
+                include: [
+                    {
+                        model: User,
+                        as: 'author',
+                        attributes: ['username', 'avatar']
                     }
-                    if (block.userId !== null) {
-                        listUserBlocks.push(block.userId);
-                    }
-                    if (block.authorId !== null) {
-                        listUserBlocks.push(block.authorId);
-                    }
-                }
-            }
-
-            const listMessages = await Message.findAll({
-                    include: [
-                        {
-                            model: User,
-                            as: 'author',
-                            attributes: (['username'])
-                        }
-                    ],
-                    where: {
-                        groupId: id,
-                        userId: {
-                            [Op.notIn]: listUserBlocks
-                        },
-                        createdAt: {
-                            [Op.gt]: isLeaveGroup.getMessageSince
-                        }
-                    },
-                    attributes: {
-                        exclude: [
-                            'authorId',
-                            'deletedAt',
-                            'groupId',
-                        ],
-                    },
-                    order: [
-                        ['createdAt', 'DESC']
-                    ]
-                }
-            );
-            return responseHelper.responseSuccess(res, listMessages);
-        }
-        catch
-            (e) {
+                ],
+                where: {
+                    id: groups
+                },
+                attributes: {
+                    exclude: ['authorId', 'updatedAt', 'createdAt', 'deletedAt']
+                },
+                order: [
+                    ['createdAt', 'DESC']
+                ],
+            });
+            return responseHelper.responseSuccess(res, listActiveGroups);
+        } catch (e) {
             return responseHelper.responseError(res, e);
         }
-    }
-    ;
+    };
+
+    inviteToJoinGroup = async (req, res, next) => {
+        try {
+            const {userId} = req.body;
+            const groupId = req.params.id;
+            const userLoginId = req.user.id;
+
+            console.log(groupId);
+            console.log(userLoginId);
+            console.log(userId);
+
+            const isMembers = await MemberGroup.find({
+                where: {
+                    userId: userLoginId,
+                    groupId
+                },
+                attributes: ['id']
+            });
+            if (isMembers === null) {
+                return responseHelper.responseError(res, new Error('UserLogin was not in that Group'))
+            }
+
+            const memberGroups = await MemberGroup.find({
+                where: {
+                    groupId,
+                    userId: userId
+                },
+                attributes: (['id'])
+            });
+            if (memberGroups !== null) {
+                return responseHelper.responseError(res, new Error('User had been in that Group'))
+            }
+
+            const newMemberGroup = await MemberGroup.create({
+                userId,
+                groupId,
+                clearedAt: sequelize.fn('NOW')
+            });
+            return responseHelper.responseSuccess(res, newMemberGroup);
+        } catch (e) {
+            return responseHelper.responseError(res, e);
+        }
+    };
 }

@@ -1,34 +1,54 @@
 'use strict';
 
-import {Message, Group, User, MemberGroup, Op, Block} from '../models';
+import {Message, Group, User, MemberGroup, Op, sequelize, Block} from '../models';
 import {responseHelper} from '../helpers/index'
 
 export default class MessageController {
-    getListMessages = async (req, res, next) => {
+    getAllMessages = async (req, res, next) => {
         try {
-            const messages = await Message.findAll({
-                order: [
-                    ['createdAt', 'DESC']
-                ],
-                include: [
-                    {
-                        model: User,
-                        as: 'author'
-                    },
-                    {
-                        model: Group,
-                        as: 'group'
-                    }
-                ],
-                attributes: {
-                    exclude: [
-                        'authorId',
-                        'groupId'
-                    ],
-                }
+            const {groupId} = req.body
+            const userLoginId = req.user.id;
+            const memberGroups = await MemberGroup.find({
+                where: {
+                    userId: userLoginId,
+                    groupId
+                },
+                attributes: ['clearedAt']
             });
-            return responseHelper.responseSuccess(res, messages);
-        } catch (e) {
+
+            if (memberGroups === null) {
+                return responseHelper.responseError(res, new Error('User is not in group'))
+            }
+
+            const listMessages = await Message.findAll({
+                    include: [
+                        {
+                            model: User,
+                            as: 'author',
+                            attributes: (['username'])
+                        }
+                    ],
+                    where: {
+                        groupId,
+                        createdAt: {
+                            [Op.gt]: memberGroups.clearedAt
+                        }
+                    },
+                    attributes: {
+                        exclude: [
+                            'authorId',
+                            'deletedAt',
+                            'groupId',
+                        ],
+                    },
+                    order: [
+                        ['createdAt', 'DESC']
+                    ]
+                }
+            );
+            return responseHelper.responseSuccess(res, listMessages);
+        }
+        catch (e) {
             return responseHelper.responseError(res, e);
         }
     };
@@ -36,7 +56,7 @@ export default class MessageController {
     createMessage = async (req, res, next) => {
         try {
             const {groupId, body, type} = req.body;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const listBlocks = await Block.findAll({
                 where: {
                     [Op.or]: [
@@ -44,7 +64,7 @@ export default class MessageController {
                             groupId
                         },
                         {
-                            authorId
+                            authorId: userLoginId
                         }
 
                     ]
@@ -78,7 +98,7 @@ export default class MessageController {
             }
 
             const newMessage = await Message.create({
-                authorId,
+                authorId: userLoginId,
                 groupId,
                 body,
                 type
@@ -126,7 +146,7 @@ export default class MessageController {
         try {
             const {id} = req.params;
             const {groupId, body, type} = req.body;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const updatedMessage = await Message.update(
                 {
                     groupId,
@@ -136,7 +156,7 @@ export default class MessageController {
                 {
                     where: {
                         id,
-                        authorId
+                        authorId: userLoginId
                     },
                     returning: true
                 }
@@ -153,11 +173,11 @@ export default class MessageController {
     deleteMessage = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const message = await Message.destroy({
                 where: {
                     id,
-                    authorId
+                    authorId: userLoginId
                 }
             });
             return responseHelper.responseSuccess(res, message >= 1);

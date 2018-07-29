@@ -94,7 +94,7 @@ export default class BlockController {
         try {
             const {id} = req.params;
             const {userId, groupId} = req.body;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const updatedBlock = await Block.update(
                 {
                     userId,
@@ -103,7 +103,7 @@ export default class BlockController {
                 {
                     where: {
                         id,
-                        authorId
+                        authorId: userLoginId
                     },
                     returning: true
                 }
@@ -120,11 +120,11 @@ export default class BlockController {
     deleteBlock = async (req, res, next) => {
         try {
             const {id} = req.params;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const block = await Block.destroy({
                 where: {
                     id,
-                    authorId
+                    authorId: userLoginId
                 }
             });
             return responseHelper.responseSuccess(res, block >= 1);

@@ -127,8 +127,8 @@ export default class UserController {
         try {
             const {id} = req.params;
             const {username, address} = req.body;
-            const authorId = req.user.id;
-            if (id !== authorId) {
+            const userLoginId = req.user.id;
+            if (id !== userLoginId) {
                 responseHelper.responseError(res, 'User is not the author of that id')
             }
             const updatedUser = await User.update(
@@ -230,143 +230,22 @@ export default class UserController {
     blockUserInGroup = async (req, res, next) => {
         try {
             const {userId, groupId} = req.params;
-            const authorId = req.user.id;
+            const userLoginId = req.user.id;
             const group = await Group.find({
                 where: {
-                    authorId,
+                    authorId: userLoginId,
                     id: groupId
                 }
             });
             if (group !== null) {
                 const newBlock = await Block.create({
-                    authorId,
+                    authorId: userLoginId,
                     userId,
                     groupId
                 });
                 return responseHelper.responseSuccess(res, newBlock);
             }
             return responseHelper.responseError(res, new Error('User is not the author of that group'))
-        } catch (e) {
-            return responseHelper.responseError(res, e);
-        }
-    };
-
-
-    joinGroup = async (req, res, next) => {
-        try {
-            const {groupId} = req.body;
-            const userId = req.user.id;
-            const group = await Group.find({
-               where: {
-                   id: groupId
-               },
-                attributes: (['createdAt'])
-            });
-            if (group === null) {
-                return responseHelper.responseError(res, new Error('group dose not exist'))
-            }
-            const newMemberInGroup = await MemberGroup.create(
-                {
-                    userId,
-                    groupId,
-                    getMessageSince: group.createdAt
-                });
-            return responseHelper.responseSuccess(res, newMemberInGroup);
-        } catch (e) {
-            return responseHelper.responseError(res, e);
-        }
-    };
-
-    leaveGroup = async (req, res, next) => {
-        try {
-            const {groupId} = req.body;
-            const userId = req.user.id;
-            const newMemberInGroup = await MemberGroup.update(
-                {
-                    isLeave: true,
-                },
-                {
-                where: {
-                    userId,
-                    groupId
-                }
-            });
-            return responseHelper.responseSuccess(res, newMemberInGroup);
-        } catch (e) {
-            return responseHelper.responseError(res, e);
-        }
-    };
-
-    getListActiveGroups = async (req, res, next) => {
-        try {
-            const authorId = req.user.id;
-            const userBlocks = await Block.findAll({
-                where: {
-                    authorId
-                },
-                attributes: ['groupId']
-            });
-            let listGroupBlocks = [];
-            if (userBlocks.length > 0) {
-                for (let item of userBlocks) {
-                    listGroupBlocks.push(item.groupId)
-                }
-            }
-
-            const listActiveGroups = await Group.findAll({
-                include: [
-                    {
-                        model: User,
-                        as: 'author'
-                    },
-                    {
-                        required: true,
-                        model: MemberGroup,
-                        as: 'members',
-                        where: {
-                            userId: authorId,
-                            isLeave: false,
-                        },
-                        attributes: []
-                    },
-                ],
-                where: {
-                    id: {
-                        [Op.notIn]: listGroupBlocks
-                    }
-                },
-                attributes: {
-                    exclude: ['authorId', 'updatedAt', 'createdAt', 'deletedAt']
-                },
-                order: [
-                    ['createdAt', 'DESC']
-                ],
-            });
-            return responseHelper.responseSuccess(res, listActiveGroups);
-        } catch (e) {
-            return responseHelper.responseError(res, e);
-        }
-    };
-
-    clearConversation = async (req, res, next) => {
-        try {
-            const authorId = req.user.id;
-            const {groupId} = req.body;
-            const clearConversation = await MemberGroup.update(
-                {
-                    getMessageSince: sequelize.fn("NOW")
-                },
-                {
-                    where: {
-                        groupId,
-                        userId: authorId
-                    },
-                    returning: true
-                });
-            if (clearConversation[0] === 0) {
-                return responseHelper.responseError(res, new Error('Cant clear conversation'));
-            }
-            return responseHelper.responseSuccess(res, clearConversation[1]);
         } catch (e) {
             return responseHelper.responseError(res, e);
         }
