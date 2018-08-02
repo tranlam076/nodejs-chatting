@@ -1,5 +1,5 @@
 'use strict';
-import {JWTHelper, responseHelper} from '../helpers'
+import {JWTHelper, Response} from '../helpers'
 
 export default class Authentication {
 
@@ -19,15 +19,15 @@ export default class Authentication {
             } else if (authorization) {
                 const tokens = authorization.split('Bearer ');
                 if (tokens.length !== 2) {
-                    return responseHelper.responseError(res, new Error('token is not provided'))
+                    return Response.returnError(res, new Error('token is not provided'))
                 }
                 req.user = await JWTHelper.verify(tokens[1]);
             } else {
-                return responseHelper.responseError(res, new Error('token is not provided'))
+                return Response.returnError(res, new Error('token is not provided'))
             }
             return next();
         } catch (e) {
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     }
 

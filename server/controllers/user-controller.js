@@ -1,26 +1,26 @@
 'use strict';
 
 import {User, Block, Op, sequelize, Group, MemberGroup} from '../models';
-import {encryptHelper, responseHelper, JWTHelper} from '../helpers/index'
+import {encryptHelper, Response, JWTHelper} from '../helpers/index'
+import {userRepository} from '../repositories'
 
 export default class UserController {
-
     login = async (req, res, next) => {
         try {
             const {username, password} = req.body;
             if (username === '' || username === undefined) {
-                return responseHelper.responseError(res, new Error('Username is required field'));
+                return Response.returnError(res, new Error('Username is required field'));
             } else if (password === '' || password === undefined) {
-                return responseHelper.responseError(res, new Error('Password is required field'));
+                return Response.returnError(res, new Error('Password is required field'));
             } else {
-                const user = await User.find({
+                const user = await userRepository.getOne({
                     where: {
                         username
                     },
                     attributes: ['password', 'username', 'id', 'role']
                 });
                 if (!user) {
-                    return responseHelper.responseError(res, new Error('Username not found'));
+                    return Response.returnError(res, new Error('Username not found'));
                 } else {
                     let checkPassword = await encryptHelper.checkHash(password, user.password);
                     console.log(checkPassword);
@@ -31,58 +31,29 @@ export default class UserController {
                             username: user.username,
                             role: user.role
                         });
-                        return responseHelper.responseSuccess(res, {
+                        return Response.returnSuccess(res, {
                             token
                         });
                     }
-                    return responseHelper.responseError(res, new Error('Password is incorrect'));
+                    return Response.returnError(res, new Error('Password is incorrect'));
                 }
             }
         } catch (e) {
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
     getListUsers = async (req, res, next) => {
         try {
-            const users = await User.findAll({
+            const users = await userRepository.getAll({
                 order: [
                     ['createdAt', 'DESC']
                 ],
-                include: [
-                    {
-                        model: Block,
-                        as: 'blocks',
-                        include: [
-                            {
-                                model: User,
-                                as: 'user'
-                            },
-                            {
-                                model: Group,
-                                as: 'group'
-                            },
-                        ],
-                        attributes: {
-                            exclude: [
-                                'authorId',
-                                'userId',
-                                'groupId'
-                            ],
-                        },
-                        required: false
-                    },
-                    {
-                        model: Group,
-                        as: 'groups',
-                        required: false
-                    }
-                ]
+                attributes: ['id', 'username']
             });
-            return responseHelper.responseSuccess(res, users);
+            return Response.returnSuccess(res, users);
         } catch (e) {
-            console.log(e);
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
@@ -90,23 +61,23 @@ export default class UserController {
         try {
             const {username, password, address, role} = req.body;
             if (!Array.isArray(address) || address.length === 0) {
-                return responseHelper.responseError(res, new Error('Address is invalid'));
+                return Response.returnError(res, new Error('Address is invalid'));
             }
             if (username === '' || username === undefined) {
-                return responseHelper.responseError(res, new Error('Username is required field'));
+                return Response.returnError(res, new Error('Username is required field'));
             } else if (password === '' || password === undefined) {
-                return responseHelper.responseError(res, new Error('Password is required field'));
+                return Response.returnError(res, new Error('Password is required field'));
             }
             let newHash = await encryptHelper.createHash(password);
-            const newUser = await User.create({
+            const newUser = await userRepository.create({
                 username,
                 password: newHash,
                 address,
                 role
             });
-            return responseHelper.responseSuccess(res, newUser);
+            return Response.returnSuccess(res, newUser);
         } catch (e) {
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
@@ -115,11 +86,11 @@ export default class UserController {
             const id = req.user.id;
             const user = await User.findById(id);
             if (!user) {
-                return responseHelper.responseError(res, new Error('User not found'));
+                return Response.returnError(res, new Error('User not found'));
             }
-            return responseHelper.responseSuccess(res, user);
+            return Response.returnSuccess(res, user);
         } catch (e) {
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
@@ -129,7 +100,7 @@ export default class UserController {
             const {username, address} = req.body;
             const userLoginId = req.user.id;
             if (id !== userLoginId) {
-                responseHelper.responseError(res, 'User is not the author of that id')
+                Response.returnError(res, 'User is not the author of that id')
             }
             const updatedUser = await User.update(
                 {
@@ -144,11 +115,11 @@ export default class UserController {
                 }
             );
             if (updatedUser[0] === 0) {
-                return responseHelper.responseError(res, new Error('Cannot update user'));
+                return Response.returnError(res, new Error('Cannot update user'));
             }
-            return responseHelper.responseSuccess(res, updatedUser[1]);
+            return Response.returnSuccess(res, updatedUser[1]);
         } catch (e) {
-            return responseHelper.responseError(res, new Error('User not found'));
+            return Response.returnError(res, new Error('User not found'));
         }
     };
 
@@ -160,10 +131,10 @@ export default class UserController {
                     id
                 }
             });
-            return responseHelper.responseSuccess(res, true);
+            return Response.returnSuccess(res, true);
         } catch (e) {
             console.log(e);
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
@@ -178,13 +149,13 @@ export default class UserController {
                 }
             });
             if (user !== null) {
-                return responseHelper.responseSuccess(res, user.dataValues);
+                return Response.returnSuccess(res, user.dataValues);
             } else {
-                return responseHelper.responseError(res, new Error('User not found'));
+                return Response.returnError(res, new Error('User not found'));
             }
         } catch (e) {
             console.log(e);
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
@@ -200,7 +171,7 @@ export default class UserController {
             });
             console.log(user);
             if (!user) {
-                return responseHelper.responseError(res, new Error('User not found'));
+                return Response.returnError(res, new Error('User not found'));
             }
             const checkPassword = await encryptHelper.checkHash(currentPassword, user.password);
             if (checkPassword) {
@@ -217,13 +188,13 @@ export default class UserController {
                     }
                 );
                 if (updatedUser[0] === 0) {
-                    return responseHelper.responseError(res, new Error('Cannot update password'));
+                    return Response.returnError(res, new Error('Cannot update password'));
                 }
-                return responseHelper.responseSuccess(res, updatedUser[1]);
+                return Response.returnSuccess(res, updatedUser[1]);
             }
-            return responseHelper.responseError(res, new Error('Password is incorrect'));
+            return Response.returnError(res, new Error('Password is incorrect'));
         } catch (e) {
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 
@@ -243,11 +214,11 @@ export default class UserController {
                     userId,
                     groupId
                 });
-                return responseHelper.responseSuccess(res, newBlock);
+                return Response.returnSuccess(res, newBlock);
             }
-            return responseHelper.responseError(res, new Error('User is not the author of that group'))
+            return Response.returnError(res, new Error('User is not the author of that group'))
         } catch (e) {
-            return responseHelper.responseError(res, e);
+            return Response.returnError(res, e);
         }
     };
 }

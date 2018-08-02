@@ -20,7 +20,7 @@ module.exports = (app) => {
     app.route('/users/search/:username')
         .get([Authentication.isAuth], userController.searchUser);
 
-    app.route('/users/login')
+    app.route('/login')
         .post(userController.login);
 
     app.route('/users/:userId/block/:groupId')

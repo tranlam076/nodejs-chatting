@@ -4,6 +4,6 @@ import JWTHelper from "./jwt-helper";
 
 module.exports = {
     encryptHelper: new Encrypt(),
-    responseHelper: new Response(),
+    Response,
     JWTHelper,
 };

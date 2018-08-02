@@ -22,7 +22,14 @@ module.exports = {
             avatar: {
                 type: DataTypes.STRING
             },
-
+            partnerId: {
+                type: DataTypes.UUID,
+                references: {
+                    model: 'User',
+                    key: 'id'
+                },
+                onDelete: 'CASCADE'
+            },
             type: {
                 type: DataTypes.ENUM(['private', 'group']),
                 allowNull: false

@@ -5,9 +5,9 @@ import {Authentication, RoleManagement} from '../middlewares'
 
 module.exports = (app) => {
 
-    app.route('/member-groups')
-        .delete([Authentication.isAuth], memberGroupController.leaveGroup);
+    app.route('/members/groups/:id/leave')
+        .delete(Authentication.isAuth, memberGroupController.leaveGroup);
 
-    app.route('/member-groups/conversations')
-        .delete([Authentication.isAuth], memberGroupController.clearConversation)
+    app.route('/members/groups/:id/invite')
+        .post(Authentication.isAuth, memberGroupController.inviteToGroup)
 };

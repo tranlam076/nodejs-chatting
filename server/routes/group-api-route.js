@@ -6,7 +6,7 @@ import {Authentication} from '../middlewares'
 module.exports = (app) => {
 
     app.route('/groups')
-        .get([Authentication.isAuth], groupController.getListActiveGroups)
+        .get(Authentication.isAuth, groupController.getListActiveGroups)
         .post([Authentication.isAuth], groupController.createGroup);
 
     app.route('/groups/:id')
@@ -14,6 +14,4 @@ module.exports = (app) => {
         .put([Authentication.isAuth], groupController.updateGroup)
         .delete([Authentication.isAuth], groupController.deleteGroup);
 
-    app.route('/groups/:id/invitations')
-        .post([Authentication.isAuth], groupController.inviteToJoinGroup);
 };
