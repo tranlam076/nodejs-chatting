@@ -23,6 +23,23 @@ FS.readdirSync(routePath).forEach((file) => {
     require(`${routePath}${file}`)(app);
 });
 
-Http.createServer(app).listen(3030, () => {
+const server = Http.createServer(app).listen(3030, () => {
     console.log(`App listening on 3030!`);
 });
+//
+// const io = require('socket.io')(server);
+// let i = 1;
+// io.on('connection', function (socket) {
+//     console.log(i++ + 'client ID: ' + socket.id);
+//
+//     // socket.emit('news', { hello: 'world' });
+//
+//     socket.on('message/create', function (data, callback) {
+//         console.log(data);
+//         socket.broadcast.emit('message/receive', data);
+//         return callback({
+//             success: true,
+//             data
+//         })
+//     });
+// });
